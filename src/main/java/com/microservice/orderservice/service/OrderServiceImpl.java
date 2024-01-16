@@ -20,11 +20,20 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final RestTemplate restTemplate;
 
+    private final ProductService productService;
+
+    private final PaymentService paymentService;
+
+
+
+
     @Override
     public long placeOrder(OrderRequest orderRequest) {
         log.info("OrderServiceImpl | placeOrder is called");
 
         log.info("OrderServiceImpl | placeOrder | Placing Order Request orderRequest : " + orderRequest.toString());
+
+        productService.reduceQuantity(orderRequest.getProductId(), orderRequest.getQuantity());
 
         log.info("OrderServiceImpl | placeOrder | Creating Order with Status CREATED");
         Order order = Order.builder()
@@ -48,6 +57,7 @@ public class OrderServiceImpl implements OrderService {
         String orderStatus = null;
 
         try {
+            paymentService.doPayment(paymentRequest);
             log.info("OrderServiceImpl | placeOrder | Calling Payment Service to complete the payment");
             PaymentResponse paymentResponse = restTemplate.postForObject(
                     "http://PAYMENT-SERVICE/payment/complete",  // Adjust the URL as per your payment service API
